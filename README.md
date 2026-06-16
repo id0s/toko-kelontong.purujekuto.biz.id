@@ -1,61 +1,105 @@
-# CodeIgniter 4 Framework
+# 🛒 Toko Kelontong & RFID Payment - Warung Fitri Lopet
 
-## What is CodeIgniter?
+Sistem Manajemen Toko Kelontong, Point of Sale (POS) Kasir, dan Integrasi Pembayaran RFID/QRIS berbasis **CodeIgniter 4** dan **MySQL**.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## 📌 Alur Kerja Sistem
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+Aplikasi ini menghubungkan antarmuka kasir (POS), katalog mandiri pelanggan, dan pemroses pembayaran RFID/QRIS secara real-time.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+```mermaid
+flowchart TD
+    Pelanggan([Pelanggan]) -->|Pilih Barang| Katalog[Katalog Mandiri / Checkout]
+    Kasir([Kasir]) -->|Scan Produk| POS[Dashboard POS Kasir]
+    Katalog -->|Metode RFID/QRIS| PayGW[Payment Gateway API]
+    POS -->|Tap Kartu RFID| PayGW
+    PayGW -->|Kurangi Saldo / Validasi QRIS| DB[(Database rfid_payment)]
+    DB -->|Update Transaksi & Stok| POS
+```
 
-## Important Change with index.php
+---
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## ⚡ Fitur Utama
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+- **🖥️ Point of Sale (POS) Kasir**
+  - Input barang belanjaan dengan cepat melalui dashboard kasir.
+  - Integrasi pembacaan kartu RFID/NFC untuk pembayaran instan sekali tap.
+  - Sinkronisasi status transaksi & pencetakan nota secara langsung.
+- **🛍️ Katalog Pelanggan & Checkout Mandiri**
+  - Antarmuka web yang ramah pengguna untuk pelanggan memilih produk sendiri.
+  - Pembayaran mandiri via **QRIS** (otomatis memunculkan kode QR) atau **RFID**.
+- **🔑 Admin Panel (Kelola Produk & Stok)**
+  - Pengelolaan data produk secara dinamis (Nama Produk, SKU, Kategori, Harga Beli, Harga Jual, & Stok).
+  - Manajemen stok terintegrasi dengan Supplier (pembelian masuk / restok).
+  - Proteksi keamanan akses dashboard admin.
+- **💳 Payment Gateway Integration**
+  - Manajemen saldo kartu RFID pelanggan.
+  - Log audit lengkap dari aktivitas tap kartu RFID (*RFID Logs*).
 
-**Please** read the user guide for a better explanation of how CI4 works!
+---
 
-## Repository Management
+## 📁 Struktur Direktori Utama
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+- [`app/Controllers/`](file:///mnt/samba-toko-kelontong/app/Controllers/) - Logika aplikasi (POS, Checkout, Admin, dll).
+- [`app/Views/`](file:///mnt/samba-toko-kelontong/app/Views/) - Antarmuka pengguna (Tampilan Dashboard Kasir, Katalog, dll).
+- [`app/Config/Routes.php`](file:///mnt/samba-toko-kelontong/app/Config/Routes.php) - Pengaturan rute URL sistem.
+- [`.env`](file:///mnt/samba-toko-kelontong/.env) - Konfigurasi database & baseURL lingkungan lokal.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Contributing
+## ⚙️ Kebutuhan Sistem
 
-We welcome contributions from the community.
+- **PHP**: Versi 8.2 atau lebih baru.
+- **Database**: MySQL 5.7+ atau MariaDB 10.3+.
+- **Ekstensi PHP**: `intl`, `mbstring`, `mysqlnd`, `curl`, `json`.
 
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
+---
 
-## Server Requirements
+## 🚀 Panduan Instalasi
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+### 1. Kloning & Persiapan Berkas
+Buka terminal Anda di direktori proyek:
+```bash
+git clone git@github.com:id0s/toko-kelontong.purujekuto.biz.id.git
+cd toko-kelontong.purujekuto.biz.id
+```
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+### 2. Konfigurasi Lingkungan (`.env`)
+Salin berkas `.env.example` menjadi `.env` (atau buat berkas `.env` baru jika belum ada):
+```ini
+# Atur URL aplikasi
+app.baseURL = 'http://localhost:8080/'
+
+# Salin konfigurasi database berikut
+database.default.hostname = localhost
+database.default.database = rfid_payment
+database.default.username = USERNAME_DB_ANDA
+database.default.password = PASSWORD_DB_ANDA
+database.default.DBDriver = MySQLi
+database.default.port = 3306
+```
+
+### 3. Impor Database
+Buat database bernama `rfid_payment` di server MySQL Anda, lalu impor skema database dari repositori payment gateway:
+```sql
+# Impor berkas install.sql yang berisi struktur tabel users, products, transaksi, dsb.
+SOURCE install.sql;
+```
+
+### 4. Jalankan Server
+Gunakan perintah bawaan CodeIgniter untuk menjalankan server lokal:
+```bash
+php spark serve
+```
+Aplikasi dapat diakses melalui peramban web di: `http://localhost:8080`
+
+---
+
+## 🔐 Kredensial Default
+
+- **Halaman Admin**: `http://localhost:8080/admin`
+- **Password Admin**: `perintis29`
 
 > [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+> Sangat disarankan untuk mengubah password default pada file `app/Controllers/Admin.php` atau tabel database admins sebelum melakukan deploy ke server produksi.
